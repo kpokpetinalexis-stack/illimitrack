@@ -30,7 +30,23 @@ export default function App() {
     const expiring = getExpiringClients(data);
     setAlertBanner(expiring);
     if (Notification.permission === 'granted') checkAndNotify(data);
+
+    // Sync clients vers le Service Worker
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients: data });
+    }
+
+    // Vibration si des illimités expirent bientôt
+    if (expiring.length > 0 && navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
   }, []);
+
+  const syncSW = (clients) => {
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients });
+    }
+  };
 
   const handleAdd = (clientData) => {
     addClient(clientData);
@@ -40,6 +56,7 @@ export default function App() {
     setShowForm(false);
     setRenewClient(null);
     setView('list');
+    syncSW(updated);
   };
 
   const handleDelete = (id) => {
@@ -47,6 +64,7 @@ export default function App() {
     const updated = deleteClient(id);
     setClients(updated);
     setAlertBanner(getExpiringClients(updated));
+    syncSW(updated);
   };
 
   const handleRenew = (client) => {
