@@ -78,11 +78,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-[Outfit,sans-serif] max-w-lg mx-auto relative">
       {/* Header */}
-      <div className="bg-[#2E4036] text-white px-4 pt-10 pb-5 sticky top-0 z-40 shadow-lg">
+      <div className="bg-[#111827] text-white px-4 pt-10 pb-5 sticky top-0 z-40 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">IllimiTrack</h1>
-            <p className="text-green-200 text-xs">Moov · MTN · Celtis</p>
+            <h1 className="text-xl font-bold tracking-tight">KKT Store</h1>
+            <p className="text-gray-400 text-xs">Illimité Track · Moov · MTN · Celtis</p>
           </div>
           <button
             onClick={handleNotifRequest}
@@ -122,7 +122,7 @@ export default function App() {
         {/* Stats */}
         <div className="grid grid-cols-4 gap-2 mt-4 mb-4">
           {[
-            { label: 'Total', value: stats.total, color: 'bg-[#2E4036] text-white' },
+            { label: 'Total', value: stats.total, color: 'bg-[#111827] text-white' },
             { label: 'Actifs', value: stats.active, color: 'bg-green-100 text-green-800' },
             { label: 'Bientôt', value: stats.expiring, color: 'bg-orange-100 text-orange-800' },
             { label: 'Expirés', value: stats.expired, color: 'bg-gray-100 text-gray-600' },
@@ -142,7 +142,7 @@ export default function App() {
               onClick={() => setFilter(f.value)}
               className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 filter === f.value
-                  ? 'bg-[#2E4036] text-white shadow-sm'
+                  ? 'bg-[#111827] text-white shadow-sm'
                   : 'bg-white text-gray-600 border border-gray-200'
               }`}
             >
@@ -178,7 +178,7 @@ export default function App() {
         <button
           onClick={() => setView('list')}
           className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-            view === 'list' ? 'text-[#2E4036] bg-[#2E4036]/10 font-semibold' : 'text-gray-400'
+            view === 'list' ? 'text-[#111827] bg-[#111827]/10 font-semibold' : 'text-gray-400'
           }`}
         >
           <Users size={22} />
@@ -187,7 +187,7 @@ export default function App() {
 
         <button
           onClick={() => { setRenewClient(null); setShowForm(true); }}
-          className="flex flex-col items-center gap-1 bg-[#2E4036] text-white px-8 py-3 rounded-2xl shadow-md hover:bg-[#1e2e26] transition-colors"
+          className="flex flex-col items-center gap-1 bg-[#111827] text-white px-8 py-3 rounded-2xl shadow-md hover:bg-[#1e2e26] transition-colors"
         >
           <PlusCircle size={22} />
           <span className="text-xs font-semibold">Ajouter</span>
@@ -196,7 +196,7 @@ export default function App() {
         <button
           onClick={() => setView('stats')}
           className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-            view === 'stats' ? 'text-[#2E4036] bg-[#2E4036]/10 font-semibold' : 'text-gray-400'
+            view === 'stats' ? 'text-[#111827] bg-[#111827]/10 font-semibold' : 'text-gray-400'
           }`}
         >
           <TrendingUp size={22} />

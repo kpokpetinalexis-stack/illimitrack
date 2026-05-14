@@ -98,7 +98,7 @@ export default function StatsView({ clients }) {
         </button>
         <div className="text-center">
           <p className="font-bold text-gray-900 text-sm">{MOIS[month]} {year}</p>
-          {isCurrentMonth && <p className="text-xs text-[#2E4036] font-medium">Ce mois-ci</p>}
+          {isCurrentMonth && <p className="text-xs text-[#111827] font-medium">Ce mois-ci</p>}
         </div>
         <button onClick={nextMonth} className="p-1.5 rounded-xl hover:bg-gray-100 transition-colors">
           <ChevronRight size={20} className="text-gray-600" />

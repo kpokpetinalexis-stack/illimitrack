@@ -37,7 +37,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
       <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#2E4036] rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#111827] rounded-xl flex items-center justify-center">
               <UserPlus size={16} className="text-white" />
             </div>
             <h2 className="text-lg font-bold text-gray-900">
@@ -57,7 +57,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
               placeholder="Ex: Mermoz, Dame Sana..."
               value={form.name}
               onChange={set('name')}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036] focus:border-transparent"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
                 placeholder="07 XX XX XX XX"
                 value={form.phone}
                 onChange={set('phone')}
-                className="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036]"
+                className="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
                 type="date"
                 value={form.activationDate}
                 onChange={set('activationDate')}
-                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036]"
+                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
             <div>
@@ -115,7 +115,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
                 type="date"
                 value={form.expirationDate}
                 onChange={set('expirationDate')}
-                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036]"
+                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
 
           <button
             type="submit"
-            className="w-full bg-[#2E4036] text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-[#1e2e26] transition-colors shadow-md"
+            className="w-full bg-[#111827] text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-[#1e2e26] transition-colors shadow-md"
           >
             {prefill ? '✓ Renouveler' : '+ Enregistrer le client'}
           </button>

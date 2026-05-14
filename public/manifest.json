@@ -1,7 +1,7 @@
 {
-  "name": "IllimiTrack",
-  "short_name": "IllimiTrack",
-  "description": "Gestion des illimités Moov, MTN et Celtis",
+  "name": "KKT Store",
+  "short_name": "KKT Store",
+  "description": "KKT Store — Illimité Track",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#2E4036",
