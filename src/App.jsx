@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Users, PlusCircle, Search, BellOff, TrendingUp } from 'lucide-react';
 import ClientCard from './components/ClientCard';
 import AddClientForm from './components/AddClientForm';
+import StatsView from './components/StatsView';
 import { getClients, addClient, deleteClient } from './utils/storage';
 import { requestPermission, checkAndNotify, getExpiringClients, getClientStatus } from './utils/notifications';
 
@@ -150,8 +151,11 @@ export default function App() {
           ))}
         </div>
 
+        {/* Stats view */}
+        {view === 'stats' && <StatsView clients={clients} />}
+
         {/* Client list */}
-        {filtered.length === 0 ? (
+        {view !== 'stats' && (filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Users size={48} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Aucun client trouvé</p>
@@ -166,7 +170,7 @@ export default function App() {
               onRenew={handleRenew}
             />
           ))
-        )}
+        ))}
       </div>
 
       {/* Bottom navigation */}
