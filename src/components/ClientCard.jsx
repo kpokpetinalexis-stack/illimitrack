@@ -20,10 +20,9 @@ const fmt = (dateStr) => {
 
 const formatPhone = (phone) => {
   const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('00')) return digits.slice(2);
-  if (digits.startsWith('+')) return digits.slice(1);
-  if (digits.length === 8) return '229' + digits;
-  return digits;
+  if (digits.startsWith('00229')) return digits.slice(2);
+  if (digits.startsWith('229')) return digits;
+  return '229' + digits;
 };
 
 const buildWhatsAppMessage = (client, status) => {

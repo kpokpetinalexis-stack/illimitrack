@@ -63,13 +63,16 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Numéro de téléphone</label>
-            <input
-              type="tel"
-              placeholder="07 XX XX XX XX"
-              value={form.phone}
-              onChange={set('phone')}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036]"
-            />
+            <div className="flex">
+              <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-sm font-semibold text-gray-600">+229</span>
+              <input
+                type="tel"
+                placeholder="07 XX XX XX XX"
+                value={form.phone}
+                onChange={set('phone')}
+                className="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E4036]"
+              />
+            </div>
           </div>
 
           <div>
