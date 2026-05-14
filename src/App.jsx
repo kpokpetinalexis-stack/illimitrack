@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Bell, Users, PlusCircle, Search, BellOff, TrendingUp } from 'lucide-react';
+import { Bell, Users, PlusCircle, Search, BellOff, TrendingUp, LogOut } from 'lucide-react';
 import ClientCard from './components/ClientCard';
 import AddClientForm from './components/AddClientForm';
 import StatsView from './components/StatsView';
-import { getClients, addClient, deleteClient } from './utils/supabase';
+import AuthPage from './components/AuthPage';
+import { getClients, addClient, deleteClient, supabase } from './utils/supabase';
 import { requestPermission, checkAndNotify, getExpiringClients, getClientStatus } from './utils/notifications';
 
 const FILTERS = [
@@ -14,6 +15,8 @@ const FILTERS = [
 ];
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [clients, setClients] = useState([]);
   const [view, setView] = useState('list');
   const [search, setSearch] = useState('');
@@ -23,6 +26,22 @@ export default function App() {
   const [notifGranted, setNotifGranted] = useState(false);
   const [alertBanner, setAlertBanner] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthChecked(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setClients([]);
+  };
 
   const loadClients = async () => {
     try {
@@ -43,9 +62,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    setNotifGranted(Notification.permission === 'granted');
-    loadClients();
-  }, []);
+    if (session) {
+      setNotifGranted(Notification.permission === 'granted');
+      loadClients();
+    }
+  }, [session]);
 
   const handleAdd = async (clientData) => {
     await addClient(clientData);
@@ -87,6 +108,14 @@ export default function App() {
     expired: clients.filter(c => getClientStatus(c.expirationDate) === 'expired').length,
   };
 
+  if (!authChecked) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!session) return <AuthPage onLogin={() => {}} />;
+
   return (
     <div className="min-h-screen bg-gray-50 font-[Outfit,sans-serif] max-w-lg mx-auto relative">
       {/* Header */}
@@ -96,13 +125,22 @@ export default function App() {
             <h1 className="text-xl font-bold tracking-tight">KKT Store</h1>
             <p className="text-gray-400 text-xs">Illimité Track · Moov · MTN · Celtis</p>
           </div>
-          <button
-            onClick={handleNotifRequest}
-            className={`p-2.5 rounded-xl transition-colors ${notifGranted ? 'bg-green-700/50 text-green-300' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
-            title={notifGranted ? 'Notifications activées' : 'Activer les notifications'}
-          >
-            {notifGranted ? <Bell size={20} /> : <BellOff size={20} />}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleNotifRequest}
+              className={`p-2.5 rounded-xl transition-colors ${notifGranted ? 'bg-green-700/50 text-green-300' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              title={notifGranted ? 'Notifications activées' : 'Activer les notifications'}
+            >
+              {notifGranted ? <Bell size={20} /> : <BellOff size={20} />}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
+              title="Déconnexion"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

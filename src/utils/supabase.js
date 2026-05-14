@@ -32,8 +32,9 @@ export async function getClients() {
 }
 
 export async function addClient(client) {
+  const { data: { user } } = await supabase.auth.getUser();
   const newClient = { ...client, id: Date.now().toString(), createdAt: new Date().toISOString() };
-  const { error } = await supabase.from('clients').insert(toRow(newClient));
+  const { error } = await supabase.from('clients').insert({ ...toRow(newClient), user_id: user.id });
   if (error) throw error;
   return newClient;
 }
