@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getClientStatus } from '../utils/notifications';
 
 const OPERATORS = [
@@ -6,31 +8,31 @@ const OPERATORS = [
   { key: 'celtis', label: 'CELTIS', color: '#ef4444', bg: 'bg-red-100', text: 'text-red-800' },
 ];
 
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
 function DonutChart({ data, total }) {
   const size = 200;
   const cx = size / 2;
   const cy = size / 2;
   const r = 72;
   const strokeWidth = 28;
+  const circumference = 2 * Math.PI * r;
 
   if (total === 0) {
     return (
       <svg width={size} height={size} className="mx-auto">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth={strokeWidth} />
-        <text x={cx} y={cy + 6} textAnchor="middle" className="text-gray-400" fontSize="14" fill="#9ca3af">Aucun client</text>
+        <text x={cx} y={cy + 6} textAnchor="middle" fontSize="13" fill="#9ca3af">Aucun client</text>
       </svg>
     );
   }
 
   let offset = 0;
-  const circumference = 2 * Math.PI * r;
   const segments = data
     .filter(d => d.count > 0)
     .map(d => {
-      const pct = d.count / total;
-      const dash = pct * circumference;
-      const gap = circumference - dash;
-      const seg = { ...d, dash, gap, offset };
+      const dash = (d.count / total) * circumference;
+      const seg = { ...d, dash, gap: circumference - dash, offset };
       offset += dash;
       return seg;
     });
@@ -38,22 +40,19 @@ function DonutChart({ data, total }) {
   return (
     <svg width={size} height={size} className="mx-auto" style={{ transform: 'rotate(-90deg)' }}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={strokeWidth} />
-      {segments.map((seg) => (
-        <circle
-          key={seg.key}
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke={seg.color}
-          strokeWidth={strokeWidth}
+      {segments.map(seg => (
+        <circle key={seg.key} cx={cx} cy={cy} r={r} fill="none"
+          stroke={seg.color} strokeWidth={strokeWidth}
           strokeDasharray={`${seg.dash} ${seg.gap}`}
-          strokeDashoffset={-seg.offset}
-          strokeLinecap="butt"
+          strokeDashoffset={-seg.offset} strokeLinecap="butt"
         />
       ))}
-      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="28" fontWeight="bold" fill="#111827" style={{ transform: 'rotate(90deg)', transformOrigin: `${cx}px ${cy}px` }}>
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="28" fontWeight="bold" fill="#111827"
+        style={{ transform: 'rotate(90deg)', transformOrigin: `${cx}px ${cy}px` }}>
         {total}
       </text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="#6b7280" style={{ transform: 'rotate(90deg)', transformOrigin: `${cx}px ${cy}px` }}>
+      <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="#6b7280"
+        style={{ transform: 'rotate(90deg)', transformOrigin: `${cx}px ${cy}px` }}>
         clients
       </text>
     </svg>
@@ -61,17 +60,51 @@ function DonutChart({ data, total }) {
 }
 
 export default function StatsView({ clients }) {
-  const total = clients.length;
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth());
+  const [year, setYear] = useState(now.getFullYear());
+
+  const prevMonth = () => {
+    if (month === 0) { setMonth(11); setYear(y => y - 1); }
+    else setMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (month === 11) { setMonth(0); setYear(y => y + 1); }
+    else setMonth(m => m + 1);
+  };
+
+  const filtered = clients.filter(c => {
+    const d = new Date(c.activationDate);
+    return d.getMonth() === month && d.getFullYear() === year;
+  });
+
+  const total = filtered.length;
 
   const byOperator = OPERATORS.map(op => ({
     ...op,
-    count: clients.filter(c => c.operator === op.key).length,
-    active: clients.filter(c => c.operator === op.key && getClientStatus(c.expirationDate) === 'active').length,
-    expired: clients.filter(c => c.operator === op.key && getClientStatus(c.expirationDate) === 'expired').length,
+    count: filtered.filter(c => c.operator === op.key).length,
+    active: filtered.filter(c => c.operator === op.key && getClientStatus(c.expirationDate) === 'active').length,
+    expired: filtered.filter(c => c.operator === op.key && getClientStatus(c.expirationDate) === 'expired').length,
   }));
+
+  const isCurrentMonth = month === now.getMonth() && year === now.getFullYear();
 
   return (
     <div className="pt-4">
+      {/* Sélecteur de mois */}
+      <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 mb-4">
+        <button onClick={prevMonth} className="p-1.5 rounded-xl hover:bg-gray-100 transition-colors">
+          <ChevronLeft size={20} className="text-gray-600" />
+        </button>
+        <div className="text-center">
+          <p className="font-bold text-gray-900 text-sm">{MOIS[month]} {year}</p>
+          {isCurrentMonth && <p className="text-xs text-[#2E4036] font-medium">Ce mois-ci</p>}
+        </div>
+        <button onClick={nextMonth} className="p-1.5 rounded-xl hover:bg-gray-100 transition-colors">
+          <ChevronRight size={20} className="text-gray-600" />
+        </button>
+      </div>
+
       <h2 className="text-base font-bold text-gray-800 mb-4">Répartition par opérateur</h2>
 
       <DonutChart data={byOperator} total={total} />
@@ -89,10 +122,7 @@ export default function StatsView({ clients }) {
                 <span className="text-lg font-bold text-gray-900">{op.count} <span className="text-sm text-gray-400 font-normal">({pct}%)</span></span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2">
-                <div
-                  className="h-2 rounded-full transition-all"
-                  style={{ width: `${pct}%`, backgroundColor: op.color }}
-                />
+                <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: op.color }} />
               </div>
               <div className="flex gap-4 mt-2 text-xs text-gray-500">
                 <span>✅ {op.active} actifs</span>
@@ -104,7 +134,9 @@ export default function StatsView({ clients }) {
       </div>
 
       {total === 0 && (
-        <p className="text-center text-gray-400 text-sm mt-8">Ajoutez des clients pour voir les statistiques</p>
+        <p className="text-center text-gray-400 text-sm mt-6">
+          Aucun client activé en {MOIS[month]} {year}
+        </p>
       )}
     </div>
   );
