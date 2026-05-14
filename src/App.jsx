@@ -3,7 +3,7 @@ import { Bell, Users, PlusCircle, Search, BellOff, TrendingUp } from 'lucide-rea
 import ClientCard from './components/ClientCard';
 import AddClientForm from './components/AddClientForm';
 import StatsView from './components/StatsView';
-import { getClients, addClient, deleteClient } from './utils/storage';
+import { getClients, addClient, deleteClient } from './utils/supabase';
 import { requestPermission, checkAndNotify, getExpiringClients, getClientStatus } from './utils/notifications';
 
 const FILTERS = [
@@ -22,49 +22,43 @@ export default function App() {
   const [renewClient, setRenewClient] = useState(null);
   const [notifGranted, setNotifGranted] = useState(false);
   const [alertBanner, setAlertBanner] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const data = getClients();
-    setClients(data);
-    setNotifGranted(Notification.permission === 'granted');
-    const expiring = getExpiringClients(data);
-    setAlertBanner(expiring);
-    if (Notification.permission === 'granted') checkAndNotify(data);
-
-    // Sync clients vers le Service Worker
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients: data });
-    }
-
-    // Vibration si des illimités expirent bientôt
-    if (expiring.length > 0 && navigator.vibrate) {
-      navigator.vibrate([200, 100, 200, 100, 200]);
-    }
-  }, []);
-
-  const syncSW = (clients) => {
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients });
+  const loadClients = async () => {
+    try {
+      const data = await getClients();
+      setClients(data);
+      const expiring = getExpiringClients(data);
+      setAlertBanner(expiring);
+      if (Notification.permission === 'granted') checkAndNotify(data);
+      if (navigator.serviceWorker?.controller)
+        navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients: data });
+      if (expiring.length > 0 && navigator.vibrate)
+        navigator.vibrate([200, 100, 200, 100, 200]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAdd = (clientData) => {
-    addClient(clientData);
-    const updated = getClients();
-    setClients(updated);
-    setAlertBanner(getExpiringClients(updated));
+  useEffect(() => {
+    setNotifGranted(Notification.permission === 'granted');
+    loadClients();
+  }, []);
+
+  const handleAdd = async (clientData) => {
+    await addClient(clientData);
+    await loadClients();
     setShowForm(false);
     setRenewClient(null);
     setView('list');
-    syncSW(updated);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!confirm('Supprimer ce client ?')) return;
-    const updated = deleteClient(id);
-    setClients(updated);
-    setAlertBanner(getExpiringClients(updated));
-    syncSW(updated);
+    await deleteClient(id);
+    await loadClients();
   };
 
   const handleRenew = (client) => {
@@ -173,7 +167,12 @@ export default function App() {
         {view === 'stats' && <StatsView clients={clients} />}
 
         {/* Client list */}
-        {view !== 'stats' && (filtered.length === 0 ? (
+        {view !== 'stats' && (loading ? (
+          <div className="text-center py-16 text-gray-400">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm">Chargement...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Users size={48} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Aucun client trouvé</p>

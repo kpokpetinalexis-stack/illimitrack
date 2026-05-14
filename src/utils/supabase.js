@@ -1,0 +1,44 @@
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://wubhngfsnhhircryurfn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1YmhuZ2ZzbmhoaXJjcnl1cmZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzUwNTgsImV4cCI6MjA5NDMxMTA1OH0.abE2a7iDX79my0gTawn3rJ38-HPx61RCaP3Bk20zHDo';
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const toRow = (c) => ({
+  id: c.id,
+  name: c.name,
+  phone: c.phone,
+  operator: c.operator,
+  activation_date: c.activationDate,
+  expiration_date: c.expirationDate,
+  created_at: c.createdAt,
+});
+
+const fromRow = (r) => ({
+  id: r.id,
+  name: r.name,
+  phone: r.phone,
+  operator: r.operator,
+  activationDate: r.activation_date,
+  expirationDate: r.expiration_date,
+  createdAt: r.created_at,
+});
+
+export async function getClients() {
+  const { data, error } = await supabase.from('clients').select('*').order('expiration_date');
+  if (error) throw error;
+  return data.map(fromRow);
+}
+
+export async function addClient(client) {
+  const newClient = { ...client, id: Date.now().toString(), createdAt: new Date().toISOString() };
+  const { error } = await supabase.from('clients').insert(toRow(newClient));
+  if (error) throw error;
+  return newClient;
+}
+
+export async function deleteClient(id) {
+  const { error } = await supabase.from('clients').delete().eq('id', id);
+  if (error) throw error;
+}
