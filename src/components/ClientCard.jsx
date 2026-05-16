@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Trash2, Phone, Calendar, RefreshCw, MessageCircle } from 'lucide-react';
 import { getClientStatus } from '../utils/notifications';
 
@@ -38,11 +39,16 @@ export default function ClientCard({ client, onDelete, onRenew }) {
   const op = OPERATOR_STYLES[client.operator] || OPERATOR_STYLES.moov;
   const st = STATUS_STYLES[status];
   const showWhatsApp = status === 'expires_tomorrow' || status === 'expires_today' || status === 'expired';
+  const [showWaPicker, setShowWaPicker] = useState(false);
 
-  const handleWhatsApp = () => {
+  const openWhatsApp = (business) => {
     const phone = formatPhone(client.phone);
     const msg = buildWhatsAppMessage(client, status);
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    const url = business
+      ? `https://wa.me/${phone}?text=${msg}`
+      : `whatsapp://send?phone=${phone}&text=${msg}`;
+    window.open(url, '_blank');
+    setShowWaPicker(false);
   };
 
   return (
@@ -74,13 +80,32 @@ export default function ClientCard({ client, onDelete, onRenew }) {
 
         <div className="flex flex-col gap-2 shrink-0">
           {showWhatsApp && (
-            <button
-              onClick={handleWhatsApp}
-              className="p-2 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
-              title="Rappel WhatsApp"
-            >
-              <MessageCircle size={16} />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowWaPicker(v => !v)}
+                className="p-2 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                title="Rappel WhatsApp"
+              >
+                <MessageCircle size={16} />
+              </button>
+              {showWaPicker && (
+                <div className="absolute right-0 top-10 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden w-44">
+                  <button
+                    onClick={() => openWhatsApp(false)}
+                    className="w-full text-left px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <span>💬</span> WhatsApp
+                  </button>
+                  <div className="h-px bg-gray-100" />
+                  <button
+                    onClick={() => openWhatsApp(true)}
+                    className="w-full text-left px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <span>💼</span> WhatsApp Business
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           <button
             onClick={() => onRenew(client)}
