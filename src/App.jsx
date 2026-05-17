@@ -68,15 +68,10 @@ export default function App() {
     }
   }, [session]);
 
-  const handleAdd = async (clientData, originalClient) => {
-    if (originalClient) {
-      await renewClientInDb(originalClient, clientData);
-    } else {
-      await addClient(clientData);
-    }
+  const handleAdd = async (clientData) => {
+    await addClient(clientData);
     await loadClients();
     setShowForm(false);
-    setRenewClient(null);
     setView('list');
   };
 
@@ -86,9 +81,14 @@ export default function App() {
     await loadClients();
   };
 
-  const handleRenew = (client) => {
-    setRenewClient(client);
-    setShowForm(true);
+  const handleRenew = async (client) => {
+    const durationMs = new Date(client.expirationDate) - new Date(client.activationDate);
+    const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
+    const today = new Date();
+    const newActivation = today.toISOString().split('T')[0];
+    const newExpiry = new Date(today.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    await renewClientInDb(client, { activationDate: newActivation, expirationDate: newExpiry });
+    await loadClients();
   };
 
   const handleNotifRequest = async () => {

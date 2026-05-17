@@ -15,9 +15,11 @@ const STATUS_STYLES = {
   expired: { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Expiré', pulse: false },
 };
 
-const fmt = (dateStr) => {
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-};
+const fmt = (dateStr) =>
+  new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+const fmtShort = (dateStr) =>
+  new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 
 const formatPhone = (phone) => {
   const digits = phone.replace(/\D/g, '');
@@ -30,7 +32,7 @@ const buildWhatsAppMessage = (client, status) => {
   const op = client.operator.toUpperCase();
   const msg = status === 'expires_today'
     ? `Bonjour ${client.name} ! 👋\n\nVotre illimité ${op} expire aujourd'hui. Souhaitez-vous le renouveler ? 📶`
-    : `Bonjour ${client.name} ! 👋\n\nVotre illimité ${op} expire demain (${fmt(client.expirationDate)}). Souhaitez-vous le renouveler ? 📶`;
+    : `Bonjour ${client.name} ! 👋\n\nVotre illimité ${op} expire demain (${fmtShort(client.expirationDate)}). Souhaitez-vous le renouveler ? 📶`;
   return encodeURIComponent(msg);
 };
 
@@ -53,9 +55,13 @@ export default function ClientCard({ client, onDelete, onRenew }) {
   };
 
   return (
-    <div className={`bg-white rounded-2xl p-4 shadow-sm border ${status === 'expired' ? 'border-gray-200 opacity-70' : status === 'expires_tomorrow' || status === 'expires_today' ? 'border-orange-300' : 'border-gray-100'} mb-3`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
+    <div className={`bg-white rounded-2xl shadow-sm border ${status === 'expired' ? 'border-gray-200 opacity-70' : status === 'expires_tomorrow' || status === 'expires_today' ? 'border-orange-300' : 'border-gray-100'} mb-3 overflow-hidden`}>
+      <div className="flex items-start justify-between gap-2 p-4">
+        {/* Left: info — cliquable pour historique */}
+        <button
+          className="flex-1 min-w-0 text-left"
+          onClick={() => client.history?.length > 0 && setShowHistory(v => !v)}
+        >
           <div className="flex items-center gap-2 mb-1">
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${op.bg} ${op.text}`}>
               {op.label}
@@ -75,10 +81,27 @@ export default function ClientCard({ client, onDelete, onRenew }) {
 
           <div className="flex items-center gap-1 text-gray-500 text-sm mt-0.5">
             <Calendar size={13} />
-            <span>{fmt(client.activationDate)} → <strong className={status === 'expires_tomorrow' || status === 'expires_today' ? 'text-orange-600' : status === 'expired' ? 'text-gray-400' : 'text-gray-700'}>{fmt(client.expirationDate)}</strong></span>
+            <span>
+              {fmtShort(client.activationDate)} →{' '}
+              <strong className={
+                status === 'expires_tomorrow' || status === 'expires_today' ? 'text-orange-600'
+                : status === 'expired' ? 'text-gray-400'
+                : 'text-gray-700'
+              }>
+                {fmtShort(client.expirationDate)}
+              </strong>
+            </span>
           </div>
-        </div>
 
+          {client.history?.length > 0 && (
+            <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-400">
+              {showHistory ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              <span>{client.history.length} renouvellement{client.history.length > 1 ? 's' : ''}</span>
+            </div>
+          )}
+        </button>
+
+        {/* Right: actions */}
         <div className="flex flex-col gap-2 shrink-0">
           {showWhatsApp && (
             <div className="relative">
@@ -125,26 +148,19 @@ export default function ClientCard({ client, onDelete, onRenew }) {
         </div>
       </div>
 
-      {client.history && client.history.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <button
-            onClick={() => setShowHistory(v => !v)}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            {showHistory ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            {client.history.length} renouvellement{client.history.length > 1 ? 's' : ''} précédent{client.history.length > 1 ? 's' : ''}
-          </button>
-          {showHistory && (
-            <div className="mt-2 space-y-1">
-              {[...client.history].reverse().map((entry, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-1.5">
-                  <Calendar size={11} />
-                  <span>{fmt(entry.activationDate)} → {fmt(entry.expirationDate)}</span>
-                  <span className="ml-auto">{new Date(entry.renewedAt).toLocaleDateString('fr-FR')}</span>
-                </div>
-              ))}
+      {/* Historique des renouvellements */}
+      {showHistory && client.history?.length > 0 && (
+        <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-1.5">
+          <p className="text-xs font-semibold text-gray-500 mb-2">Historique des plans</p>
+          {[...client.history].reverse().map((entry, i) => (
+            <div key={i} className="flex items-center justify-between text-xs text-gray-500 bg-white rounded-xl px-3 py-2 border border-gray-100">
+              <div className="flex items-center gap-2">
+                <Calendar size={11} className="text-gray-400" />
+                <span>{fmtShort(entry.activationDate)} → {fmtShort(entry.expirationDate)}</span>
+              </div>
+              <span className="text-gray-300">renouvelé le {new Date(entry.renewedAt).toLocaleDateString('fr-FR')}</span>
             </div>
-          )}
+          ))}
         </div>
       )}
     </div>

@@ -29,7 +29,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
       return setError("La date d'expiration doit être après l'activation");
     }
     setError('');
-    onAdd({ ...form, name: form.name.trim(), phone: form.phone.trim() }, prefill || null);
+    onAdd({ ...form, name: form.name.trim(), phone: form.phone.trim() });
   };
 
   return (
