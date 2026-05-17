@@ -27,6 +27,7 @@ export default function App() {
   const [alertBanner, setAlertBanner] = useState([]);
   const [notRenewedBanner, setNotRenewedBanner] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -74,11 +75,17 @@ export default function App() {
     }
   }, [session]);
 
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleAdd = async (clientData) => {
     await addClient(clientData);
     await loadClients();
     setShowForm(false);
     setView('list');
+    showToast('✅ Client ajouté avec succès');
   };
 
   const handleDelete = async (id) => {
@@ -87,14 +94,17 @@ export default function App() {
     await loadClients();
   };
 
-  const handleRenew = async (client) => {
-    const durationMs = new Date(client.expirationDate) - new Date(client.activationDate);
-    const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
-    const today = new Date();
-    const newActivation = today.toISOString().split('T')[0];
-    const newExpiry = new Date(today.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    await renewClientInDb(client, { activationDate: newActivation, expirationDate: newExpiry });
+  const handleRenew = (client) => {
+    setRenewClient(client);
+    setShowForm(true);
+  };
+
+  const handleRenewSubmit = async (clientData, originalClient) => {
+    await renewClientInDb(originalClient, clientData);
     await loadClients();
+    setShowForm(false);
+    setRenewClient(null);
+    showToast('✅ Renouvellement effectué avec succès');
   };
 
   const handleNotifRequest = async () => {
@@ -289,10 +299,17 @@ export default function App() {
       {/* Add / Renew form modal */}
       {showForm && (
         <AddClientForm
-          onAdd={handleAdd}
+          onAdd={renewClient ? (data) => handleRenewSubmit(data, renewClient) : handleAdd}
           onClose={() => { setShowForm(false); setRenewClient(null); }}
           prefill={renewClient}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#111827] text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold animate-fade-in">
+          {toast}
+        </div>
       )}
     </div>
   );

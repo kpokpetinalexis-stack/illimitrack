@@ -114,6 +114,12 @@ body::before {
 }
 .fade-up { animation: fadeSlideUp 0.7s ease both; }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.25s ease both; }
+
 /* ─── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--cream); }
