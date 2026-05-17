@@ -55,3 +55,38 @@ export const getExpiringClients = (clients) => {
     return s === 'expires_tomorrow' || s === 'expires_today';
   });
 };
+
+export const getNotRenewedClients = (clients) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return clients.filter(c => {
+    const exp = new Date(c.expirationDate);
+    exp.setHours(0, 0, 0, 0);
+    const daysSince = Math.round((today - exp) / (1000 * 60 * 60 * 24));
+    return daysSince >= 3;
+  });
+};
+
+export const checkAndNotifyNotRenewed = (clients) => {
+  if (Notification.permission !== 'granted') return;
+
+  const todayKey = new Date().toISOString().split('T')[0];
+  const notified = JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '{}');
+
+  getNotRenewedClients(clients).forEach(client => {
+    const key = `norenew_${client.id}_${todayKey}`;
+    if (!notified[key]) {
+      const exp = new Date(client.expirationDate);
+      exp.setHours(0, 0, 0, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const days = Math.round((today - exp) / (1000 * 60 * 60 * 24));
+      new Notification(`🔴 ${client.name} n'a pas encore renouvelé`, {
+        body: `Expiré depuis ${days} jour${days > 1 ? 's' : ''} · ${client.phone} · ${client.operator.toUpperCase()}`,
+        tag: key,
+      });
+      notified[key] = true;
+    }
+  });
+
+  localStorage.setItem(NOTIFIED_KEY, JSON.stringify(notified));
+};

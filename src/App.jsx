@@ -5,7 +5,7 @@ import AddClientForm from './components/AddClientForm';
 import StatsView from './components/StatsView';
 import AuthPage from './components/AuthPage';
 import { getClients, addClient, renewClient as renewClientInDb, deleteClient, supabase } from './utils/supabase';
-import { requestPermission, checkAndNotify, getExpiringClients, getClientStatus } from './utils/notifications';
+import { requestPermission, checkAndNotify, checkAndNotifyNotRenewed, getExpiringClients, getNotRenewedClients, getClientStatus } from './utils/notifications';
 
 const FILTERS = [
   { value: 'all', label: 'Tous' },
@@ -25,6 +25,7 @@ export default function App() {
   const [renewClient, setRenewClient] = useState(null);
   const [notifGranted, setNotifGranted] = useState(false);
   const [alertBanner, setAlertBanner] = useState([]);
+  const [notRenewedBanner, setNotRenewedBanner] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,8 +49,13 @@ export default function App() {
       const data = await getClients();
       setClients(data);
       const expiring = getExpiringClients(data);
+      const notRenewed = getNotRenewedClients(data);
       setAlertBanner(expiring);
-      if (Notification.permission === 'granted') checkAndNotify(data);
+      setNotRenewedBanner(notRenewed);
+      if (Notification.permission === 'granted') {
+        checkAndNotify(data);
+        checkAndNotifyNotRenewed(data);
+      }
       if (navigator.serviceWorker?.controller)
         navigator.serviceWorker.controller.postMessage({ type: 'SYNC_CLIENTS', clients: data });
       if (expiring.length > 0 && navigator.vibrate)
@@ -159,7 +165,7 @@ export default function App() {
       </div>
 
       <div className="px-4 pb-28">
-        {/* Alert banner */}
+        {/* Alert banner — expire bientôt */}
         {alertBanner.length > 0 && (
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 mt-4">
             <p className="text-orange-700 text-sm font-semibold mb-1">
@@ -170,6 +176,23 @@ export default function App() {
                 • {c.name} — {new Date(c.expirationDate).toLocaleDateString('fr-FR')}
               </p>
             ))}
+          </div>
+        )}
+
+        {/* Alert banner — pas encore renouvelé */}
+        {notRenewedBanner.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-3 mt-3">
+            <p className="text-red-700 text-sm font-semibold mb-1">
+              🔴 {notRenewedBanner.length} client{notRenewedBanner.length > 1 ? 's' : ''} n'ont pas encore renouvelé
+            </p>
+            {notRenewedBanner.map(c => {
+              const days = Math.round((new Date().setHours(0,0,0,0) - new Date(c.expirationDate).setHours(0,0,0,0)) / (1000*60*60*24));
+              return (
+                <p key={c.id} className="text-red-600 text-xs">
+                  • {c.name} — expiré depuis {days} jour{days > 1 ? 's' : ''}
+                </p>
+              );
+            })}
           </div>
         )}
 
