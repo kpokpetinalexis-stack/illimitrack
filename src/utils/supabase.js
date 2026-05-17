@@ -23,6 +23,7 @@ const fromRow = (r) => ({
   activationDate: r.activation_date,
   expirationDate: r.expiration_date,
   createdAt: r.created_at,
+  history: r.history || [],
 });
 
 export async function getClients() {
@@ -37,6 +38,21 @@ export async function addClient(client) {
   const { error } = await supabase.from('clients').insert({ ...toRow(newClient), user_id: user.id });
   if (error) throw error;
   return newClient;
+}
+
+export async function renewClient(existingClient, newDates) {
+  const historyEntry = {
+    activationDate: existingClient.activationDate,
+    expirationDate: existingClient.expirationDate,
+    renewedAt: new Date().toISOString(),
+  };
+  const updatedHistory = [...existingClient.history, historyEntry];
+  const { error } = await supabase.from('clients').update({
+    activation_date: newDates.activationDate,
+    expiration_date: newDates.expirationDate,
+    history: updatedHistory,
+  }).eq('id', existingClient.id);
+  if (error) throw error;
 }
 
 export async function deleteClient(id) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, Phone, Calendar, RefreshCw, MessageCircle } from 'lucide-react';
+import { Trash2, Phone, Calendar, RefreshCw, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getClientStatus } from '../utils/notifications';
 
 const OPERATOR_STYLES = {
@@ -40,6 +40,7 @@ export default function ClientCard({ client, onDelete, onRenew }) {
   const st = STATUS_STYLES[status];
   const showWhatsApp = status === 'expires_tomorrow' || status === 'expires_today' || status === 'expired';
   const [showWaPicker, setShowWaPicker] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const openWhatsApp = (business) => {
     const phone = formatPhone(client.phone);
@@ -123,6 +124,29 @@ export default function ClientCard({ client, onDelete, onRenew }) {
           </button>
         </div>
       </div>
+
+      {client.history && client.history.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <button
+            onClick={() => setShowHistory(v => !v)}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            {showHistory ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {client.history.length} renouvellement{client.history.length > 1 ? 's' : ''} précédent{client.history.length > 1 ? 's' : ''}
+          </button>
+          {showHistory && (
+            <div className="mt-2 space-y-1">
+              {[...client.history].reverse().map((entry, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-1.5">
+                  <Calendar size={11} />
+                  <span>{fmt(entry.activationDate)} → {fmt(entry.expirationDate)}</span>
+                  <span className="ml-auto">{new Date(entry.renewedAt).toLocaleDateString('fr-FR')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import ClientCard from './components/ClientCard';
 import AddClientForm from './components/AddClientForm';
 import StatsView from './components/StatsView';
 import AuthPage from './components/AuthPage';
-import { getClients, addClient, deleteClient, supabase } from './utils/supabase';
+import { getClients, addClient, renewClient as renewClientInDb, deleteClient, supabase } from './utils/supabase';
 import { requestPermission, checkAndNotify, getExpiringClients, getClientStatus } from './utils/notifications';
 
 const FILTERS = [
@@ -68,8 +68,12 @@ export default function App() {
     }
   }, [session]);
 
-  const handleAdd = async (clientData) => {
-    await addClient(clientData);
+  const handleAdd = async (clientData, originalClient) => {
+    if (originalClient) {
+      await renewClientInDb(originalClient, clientData);
+    } else {
+      await addClient(clientData);
+    }
     await loadClients();
     setShowForm(false);
     setRenewClient(null);
