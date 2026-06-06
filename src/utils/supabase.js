@@ -15,6 +15,7 @@ const toRow = (c) => ({
   created_at: c.createdAt,
   contact: c.contact || null,
   contact_phone: c.contactPhone || null,
+  price: c.price || 0,
 });
 
 const fromRow = (r) => ({
@@ -28,6 +29,7 @@ const fromRow = (r) => ({
   history: r.history || [],
   contact: r.contact || null,
   contactPhone: r.contact_phone || null,
+  price: r.price || 0,
 });
 
 export async function getClients() {

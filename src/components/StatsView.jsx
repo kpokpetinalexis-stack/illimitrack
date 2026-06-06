@@ -124,7 +124,7 @@ export default function StatsView({ clients }) {
     expired: filtered.filter(c => c.operator === op.key && getClientStatus(c.expirationDate) === 'expired').length,
   }));
 
-  const revenue = filtered.reduce((s, c) => s + (prices[c.operator]?.sell || 0), 0);
+  const revenue = filtered.reduce((s, c) => s + (c.price || 0), 0);
   const cost    = filtered.reduce((s, c) => s + (prices[c.operator]?.cost || 0), 0);
   const profit  = revenue - cost;
 
@@ -196,7 +196,7 @@ export default function StatsView({ clients }) {
       {/* Par opérateur — revenus */}
       <div className="space-y-2 mb-5">
         {byOperator.filter(op => op.count > 0).map(op => {
-          const opRevenue = op.count * (prices[op.key]?.sell || 0);
+          const opRevenue = filtered.filter(c => c.operator === op.key).reduce((s, c) => s + (c.price || 0), 0);
           const opCost    = op.count * (prices[op.key]?.cost || 0);
           const opProfit  = opRevenue - opCost;
           return (
@@ -263,7 +263,7 @@ export default function StatsView({ clients }) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900">Prix par opérateur</h2>
+              <h2 className="text-lg font-bold text-gray-900">Coût de revient par opérateur</h2>
               <button onClick={() => setShowPriceModal(false)} className="p-2 rounded-xl hover:bg-gray-100">
                 <X size={20} className="text-gray-500" />
               </button>
@@ -273,20 +273,9 @@ export default function StatsView({ clients }) {
               {OPERATORS.map(op => (
                 <div key={op.key}>
                   <p className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block mb-2 ${op.bg} ${op.text}`}>{op.label}</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Prix de vente (F)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={editPrices[op.key]?.sell || ''}
-                        onChange={e => setEditPrices(p => ({ ...p, [op.key]: { ...p[op.key], sell: Number(e.target.value) } }))}
-                        placeholder="Ex: 1500"
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Prix de revient (F)</label>
+                      <label className="block text-xs text-gray-500 mb-1">Coût de revient (F)</label>
                       <input
                         type="number"
                         min="0"

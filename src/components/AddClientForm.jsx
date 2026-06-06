@@ -16,6 +16,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
     operator: prefill?.operator || 'moov',
     activationDate: today(),
     expirationDate: prefill?.expirationDate ? today() : defaultExpiration(30),
+    price: '',
   });
   const [error, setError] = useState('');
 
@@ -29,7 +30,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
       return setError("La date d'expiration doit être après l'activation");
     }
     setError('');
-    onAdd({ ...form, name: form.name.trim(), phone: form.phone.trim() });
+    onAdd({ ...form, name: form.name.trim(), phone: form.phone.trim(), price: Number(form.price) || 0 });
   };
 
   return (
@@ -118,6 +119,18 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
                 className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Prix de vente (F CFA)</label>
+            <input
+              type="number"
+              min="0"
+              placeholder="Ex: 4500"
+              value={form.price}
+              onChange={set('price')}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
+            />
           </div>
 
           {error && (
