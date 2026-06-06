@@ -11,14 +11,21 @@ const OPERATORS = [
 const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const DEFAULT_PRICES = {
-  moov:   { sell: 0, cost: 0 },
-  mtn:    { sell: 0, cost: 0 },
-  celtis: { sell: 0, cost: 0 },
+  moov:   { cost: 4250 },
+  mtn:    { cost: 4000 },
+  celtis: { cost: 0 },
 };
 
 function loadPrices() {
-  try { return JSON.parse(localStorage.getItem('kkt-prices')) || DEFAULT_PRICES; }
-  catch { return DEFAULT_PRICES; }
+  try {
+    const saved = JSON.parse(localStorage.getItem('kkt-prices'));
+    if (!saved) return DEFAULT_PRICES;
+    return {
+      moov:   { cost: saved.moov?.cost   ?? 4250 },
+      mtn:    { cost: saved.mtn?.cost    ?? 4000 },
+      celtis: { cost: saved.celtis?.cost ?? 0    },
+    };
+  } catch { return DEFAULT_PRICES; }
 }
 
 const fmt = (n) => n.toLocaleString('fr-FR') + ' F';
@@ -96,11 +103,17 @@ function WeeklyChart({ filtered, month, year }) {
   );
 }
 
+const todayStr = () => new Date().toISOString().split('T')[0];
+const firstOfMonth = () => { const d = new Date(); d.setDate(1); return d.toISOString().split('T')[0]; };
+
 export default function StatsView({ clients }) {
   const now = new Date();
+  const [mode, setMode] = useState('month'); // 'month' | 'period'
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
   const [showPicker, setShowPicker] = useState(false);
+  const [dateFrom, setDateFrom] = useState(firstOfMonth());
+  const [dateTo, setDateTo] = useState(todayStr());
   const [prices, setPrices] = useState(loadPrices);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [editPrices, setEditPrices] = useState(loadPrices);
@@ -112,7 +125,10 @@ export default function StatsView({ clients }) {
 
   const filtered = clients.filter(c => {
     const d = new Date(c.activationDate);
-    return d.getMonth() === month && d.getFullYear() === year;
+    if (mode === 'month') return d.getMonth() === month && d.getFullYear() === year;
+    const from = new Date(dateFrom); from.setHours(0,0,0,0);
+    const to   = new Date(dateTo);   to.setHours(23,59,59,999);
+    return d >= from && d <= to;
   });
 
   const total = filtered.length;
@@ -130,6 +146,10 @@ export default function StatsView({ clients }) {
 
   const isCurrentMonth = month === now.getMonth() && year === now.getFullYear();
 
+  const periodLabel = mode === 'month'
+    ? `${MOIS[month]} ${year}`
+    : `${new Date(dateFrom).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} → ${new Date(dateTo).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })}`;
+
   const savePrices = () => {
     localStorage.setItem('kkt-prices', JSON.stringify(editPrices));
     setPrices(editPrices);
@@ -138,40 +158,78 @@ export default function StatsView({ clients }) {
 
   return (
     <div className="pt-4">
-      {/* Sélecteur de mois */}
-      <button
-        onClick={() => setShowPicker(v => !v)}
-        className="w-full bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 mb-2 text-center active:bg-gray-50 transition-colors"
-      >
-        <p className="font-bold text-gray-900 text-sm">{MOIS[month]} {year}</p>
-        {isCurrentMonth && <p className="text-xs text-[#111827] font-medium">Ce mois-ci</p>}
-        <p className="text-xs text-gray-400 mt-0.5">Appuie pour changer</p>
-      </button>
+      {/* Toggle Mois / Période */}
+      <div className="flex bg-white rounded-2xl border border-gray-100 shadow-sm p-1 mb-3">
+        <button
+          onClick={() => setMode('month')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${mode === 'month' ? 'bg-[#111827] text-white' : 'text-gray-500'}`}
+        >
+          Par mois
+        </button>
+        <button
+          onClick={() => setMode('period')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${mode === 'period' ? 'bg-[#111827] text-white' : 'text-gray-500'}`}
+        >
+          Période libre
+        </button>
+      </div>
 
-      {showPicker && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-md mb-4 overflow-hidden">
-          {years.map(y => (
-            <div key={y}>
-              <p className="text-xs font-bold text-gray-400 px-4 pt-3 pb-1 uppercase tracking-wide">{y}</p>
-              <div className="grid grid-cols-3 gap-1 px-3 pb-3">
-                {MOIS.map((m, i) => {
-                  const selected = i === month && y === year;
-                  return (
-                    <button key={i} onClick={() => { setMonth(i); setYear(y); setShowPicker(false); }}
-                      className={`py-2 rounded-xl text-sm font-semibold transition-all ${selected ? 'bg-[#111827] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                      {m.slice(0, 3)}
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Sélecteur de mois */}
+      {mode === 'month' && (
+        <>
+          <button
+            onClick={() => setShowPicker(v => !v)}
+            className="w-full bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 mb-2 text-center active:bg-gray-50 transition-colors"
+          >
+            <p className="font-bold text-gray-900 text-sm">{MOIS[month]} {year}</p>
+            {isCurrentMonth && <p className="text-xs text-[#111827] font-medium">Ce mois-ci</p>}
+            <p className="text-xs text-gray-400 mt-0.5">Appuie pour changer</p>
+          </button>
+
+          {showPicker && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-md mb-4 overflow-hidden">
+              {years.map(y => (
+                <div key={y}>
+                  <p className="text-xs font-bold text-gray-400 px-4 pt-3 pb-1 uppercase tracking-wide">{y}</p>
+                  <div className="grid grid-cols-3 gap-1 px-3 pb-3">
+                    {MOIS.map((m, i) => {
+                      const selected = i === month && y === year;
+                      return (
+                        <button key={i} onClick={() => { setMonth(i); setYear(y); setShowPicker(false); }}
+                          className={`py-2 rounded-xl text-sm font-semibold transition-all ${selected ? 'bg-[#111827] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                          {m.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+        </>
+      )}
+
+      {/* Sélecteur de période libre */}
+      {mode === 'period' && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Du</label>
+              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Au</label>
+              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]" />
+            </div>
+          </div>
         </div>
       )}
 
       {/* === FINANCES === */}
       <div className="flex items-center justify-between mb-3 mt-2">
-        <h2 className="text-base font-bold text-gray-800">Finances — {MOIS[month]}</h2>
+        <h2 className="text-base font-bold text-gray-800">Finances — {periodLabel}</h2>
         <button
           onClick={() => { setEditPrices(prices); setShowPriceModal(true); }}
           className="flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
