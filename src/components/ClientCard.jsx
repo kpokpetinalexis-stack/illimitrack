@@ -77,6 +77,11 @@ export default function ClientCard({ client, onDelete, onRenew, onAddNumber }) {
           <div className="flex items-center gap-1 text-gray-500 text-sm mt-0.5">
             <Phone size={13} />
             <span>{client.phone}</span>
+            {client.contactPhone && client.contactPhone !== client.phone && (
+              <span className="ml-1 text-xs bg-purple-100 text-purple-600 font-medium px-1.5 py-0.5 rounded-full">
+                via {client.contact}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1 text-gray-500 text-sm mt-0.5">
