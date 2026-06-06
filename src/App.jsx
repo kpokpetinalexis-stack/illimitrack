@@ -89,14 +89,16 @@ export default function App() {
     setAddNumberClient(null);
   };
 
-  const handleRenew = async (client) => {
-    const durationMs = new Date(client.expirationDate) - new Date(client.activationDate);
-    const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
-    const today = new Date();
-    const newActivation = today.toISOString().split('T')[0];
-    const newExpiry = new Date(today.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    await renewClientInDb(client, { activationDate: newActivation, expirationDate: newExpiry });
+  const handleRenew = (client) => {
+    setRenewClient(client);
+    setShowForm(true);
+  };
+
+  const handleRenewSubmit = async (clientData) => {
+    await renewClientInDb(renewClient, { activationDate: clientData.activationDate, expirationDate: clientData.expirationDate });
     await loadClients();
+    setShowForm(false);
+    setRenewClient(null);
   };
 
   const handleNotifRequest = async () => {
@@ -275,7 +277,7 @@ export default function App() {
       {/* Add / Renew form modal */}
       {showForm && (
         <AddClientForm
-          onAdd={handleAdd}
+          onAdd={renewClient ? handleRenewSubmit : handleAdd}
           onClose={() => { setShowForm(false); setRenewClient(null); }}
           prefill={renewClient}
         />
