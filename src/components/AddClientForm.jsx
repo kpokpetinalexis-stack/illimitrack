@@ -64,12 +64,12 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Numéro de téléphone</label>
             <div className="flex">
-              <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-sm font-semibold text-gray-600">+229</span>
+              <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-sm font-semibold text-gray-600">+22901</span>
               <input
                 type="tel"
-                placeholder="07 XX XX XX XX"
+                placeholder="XXXXXXXX"
                 value={form.phone}
-                onChange={set('phone')}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\s/g, '') }))}
                 className="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
