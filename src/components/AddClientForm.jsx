@@ -3,8 +3,8 @@ import { X, UserPlus } from 'lucide-react';
 
 const today = () => new Date().toISOString().split('T')[0];
 
-const defaultExpiration = (days = 30) => {
-  const d = new Date();
+const defaultExpiration = (days = 30, from) => {
+  const d = from ? new Date(from) : new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
 };
@@ -15,12 +15,17 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
     phone: prefill?.phone || '',
     operator: prefill?.operator || 'moov',
     activationDate: today(),
-    expirationDate: prefill?.expirationDate ? today() : defaultExpiration(30),
+    expirationDate: defaultExpiration(30, today()),
     price: '',
   });
   const [error, setError] = useState('');
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+  const setActivationDate = (e) => {
+    const activationDate = e.target.value;
+    setForm(f => ({ ...f, activationDate, expirationDate: defaultExpiration(30, activationDate) }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -106,7 +111,7 @@ export default function AddClientForm({ onAdd, onClose, prefill }) {
               <input
                 type="date"
                 value={form.activationDate}
-                onChange={set('activationDate')}
+                onChange={setActivationDate}
                 className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
               />
             </div>
